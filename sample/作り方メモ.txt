@@ -63,7 +63,8 @@ spl_autoload_register(function ($classname) {
 
 
 （4）コンポーザーインストールしなくてはいけない　
-composer.phar　　
+composer.phar
+curl -sS https://getcomposer.org/installer | php
 
 
 [root@localhost sample]# ls
