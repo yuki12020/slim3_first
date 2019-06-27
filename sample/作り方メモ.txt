@@ -1,0 +1,76 @@
+<?php
+https://qiita.com/murachi1208/items/bef385f76d055388179fを参考
+
+
+slim3　実装まで　変更した箇所
+
+(1)文字化け対策
+ｐｈｐ５．６以上はこのDSNで文字コードを指定してやる必要がある模様
+dependencies.php
+	// MySQL
+	$container['db'] = function ($c) {
+		$settings = $c->get('settings')['db'];
+		$pdo = new PDO("mysql:host=" . $settings['host'] . ";dbname=" . $settings['dbname'] . ";charset=utf8;port=" . $settings['port'],
+			$settings['user'], $settings['pass']);
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+		return $pdo;
+	};
+の
+";charset=utf8;	
+これを指定してやらないと、データーベースから文字取得するとき『????』になり文字化けする
+
+
+(2)ルーティング
+routes.phpの中身
+return function (App $app) {
+   //出来てる
+	$app->get('/book_api2', function ($request, $response, $args) {
+	  $mapper = new TestMapper($this->db);
+	  $test = $mapper->getTests();
+	  $response = $this->renderer->render($response, "book_api.phtml", ["data" => $mapper]);
+	});
+
+}
+
+/public/book_api2にアクセスするtemplatesフォルダのbook_api.phtmlに接続する
+http://192.168.179.6/slim3/sample/public/book_api2
+*(sampleフォルダ直下にslim3が入っているとき)
+
+
+(3)データべース接続
+settings.ｐｈｐ	の 
+'settings' => [　　　
+　内に記述
+		// DataBase(MySQL) settings
+		  'db' => [
+			  'host' => '192.168.179.6',
+			  'port' => '3306',
+			  'user' => 'test123',
+			  'pass' => 'password',
+			  'dbname' => 'test',
+		  ],
+		  
+
+(4)public/index.phpの中身
+require __DIR__ . '/../vendor/autoload.php';
+以下に
+// class load
+spl_autoload_register(function ($classname) {
+  require (__DIR__ . "/../classes/" . $classname . ".php");
+});
+を追加記述
+
+
+（4）コンポーザーインストールしなくてはいけない　
+composer.phar　　
+
+
+[root@localhost sample]# ls
+CONTRIBUTING.md  composer.json  docker-compose.yml  public     tests
+README.md        composer.lock  logs                src        vendor
+classes          composer.phar  phpunit.xml         templates
+
+
+（5）logsのパーミッションを開放してやる
+$ chmod 777 logs
